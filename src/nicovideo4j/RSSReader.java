@@ -2,99 +2,115 @@ package nicovideo4j;
 
 import http.ConnectionUtil;
 
+import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.URLConnection;
 import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.parsers.SAXParser;
-import javax.xml.parsers.SAXParserFactory;
+public class RSSReader{
 
-import nicovideo4j.util.HtmlUtil;
-
-import org.xml.sax.Attributes;
-import org.xml.sax.SAXException;
-import org.xml.sax.helpers.DefaultHandler;
-
-public class RSSReader extends DefaultHandler{
-
-	private List<RSSInfo> list;
-	private List<String> tags;
-	private RSSInfo info;
-	private Map<String,String> map;
+	private static RSSInfo info;
+	private static final String[] reg={
+			"<title>([^<]+)</title>",
+			"<link>([^<]+)</link>",
+			//"<pubDate>([^<]+)</pubDate>",
+			"src=\"([^\"]+)\"",
+			"nico-description\">([^<]+)</p>",
+			"nico-info-number\">([^<]+)</strong>",
+			"nico-info-length\">([^<]+)</strong>",
+			"nico-info-date\">([^<]+)</strong>",
+			"nico-info-total-view\">([^<]+)</strong>",
+			"nico-info-total-res\">([^<]+)</strong>",
+			"nico-info-total-mylist\">([^<]+)</strong>",
+			"nico-info-daily-view\">([^<]+)</strong>",
+			"nico-info-daily-res\">([^<]+)</strong>",
+			"nico-info-daily-mylist\">([^<]+)</strong>"
+	};
 	
-	public RSSReader(InputStream source) throws ParserConfigurationException, SAXException, IOException{
-		list=new ArrayList<RSSInfo>();
-		tags=new LinkedList<String>();
-		map=new TreeMap<String, String>();
-		SAXParserFactory factory=SAXParserFactory.newInstance();
-		SAXParser parser=factory.newSAXParser();
-		parser.parse(HtmlUtil.formHtml(source),this);
-	}
 	/**
 	 * @param url
 	 * @return
 	 * @throws IOException
-	 * @throws ParserConfigurationException
-	 * @throws SAXException
 	 */
-	public static List<RSSInfo> getList(String url) throws IOException, ParserConfigurationException, SAXException{
+	public static List<RSSInfo> getList(String url) throws IOException{
 		URLConnection con=ConnectionUtil.getConnection(url+"?rss=2.0");
-		RSSReader rss=new RSSReader(con.getInputStream());
-		return rss.list;
-	}
-	private void setInfo(){
-		info.setTitle(map.get("title"));
-		info.setLink(map.get("link"));
-		info.setGuid(map.get("guid"));
-		info.setPubDate(map.get("pubDate"));
-		String[] tmp=map.get("description").split("</p>");
-		info.setThumbnailUrl(tmp[0].substring(tmp[0].indexOf("http"),tmp[0].indexOf("\" width")));
-		info.setDescription(tmp[1]=tmp[1].substring(tmp[1].indexOf(">")+1));
-		tmp=tmp[2].replaceAll(",","").split("class=[^>]+>");
-		info.setNumber(Integer.parseInt(tmp[2].substring(0,tmp[2].indexOf("<"))));
-		info.setLength(tmp[3].substring(0,tmp[3].indexOf("<")));
-		info.setDate(tmp[4].substring(0,tmp[4].indexOf("<")));
-		info.setTotalView(Integer.parseInt(tmp[5].substring(0,tmp[5].indexOf("<"))));
-		info.setTotalRes(Integer.parseInt(tmp[6].substring(0,tmp[6].indexOf("<"))));
-		info.setTotalMyList(Integer.parseInt(tmp[7].substring(0,tmp[7].indexOf("<"))));
-		info.setDailyView(Integer.parseInt(tmp[8].substring(0,tmp[8].indexOf("<"))));
-		info.setDailyRes(Integer.parseInt(tmp[9].substring(0,tmp[9].indexOf("<"))));
-		info.setDailyMyList(Integer.parseInt(tmp[10].substring(0,tmp[10].indexOf("<"))));
-	}
-	@Override
-	public void startDocument() throws SAXException {
-		//System.out.println("startDocument");
-	}
-	@Override
-	public void startElement(String uri, String localName, String qName,
-			Attributes attributes) throws SAXException {
-		tags.add(qName);
-		if(qName.equals("item"))info=new RSSInfo();
-		//System.out.println("startElement("+uri+","+localName+","+qName+","+attributes.getValue("status")+")");
-	}
-	@Override
-	public void characters(char[] ch, int start, int length)
-			throws SAXException {
-		map.put(tags.get(tags.size()-1),new String(ch,start,length));
-	}
-	@Override
-	public void endElement(String uri, String localName, String qName)
-			throws SAXException {
-		if(qName.equals("item")){
-			setInfo();
-			list.add(info);
+		
+		BufferedReader bf=new BufferedReader(new InputStreamReader(con.getInputStream()));
+		
+		List<RSSInfo> list=new ArrayList<RSSInfo>();
+		
+		Pattern[] p=new Pattern[reg.length];
+		
+		String s;
+		for(int i=0;i<p.length;i++){
+			p[i]=Pattern.compile(reg[i],Pattern.CASE_INSENSITIVE);
 		}
-		//System.out.println("endElement("+uri+","+localName+","+qName+")");
-		tags.remove(tags.size()-1);
+		Matcher m;
+		while((s=bf.readLine())!=null){
+			for(int i=0;i<p.length;i++){
+				m=p[i].matcher(s);
+				if(m.find()){
+					if(i==0)info=new RSSInfo();
+					setInfo(i,m.group(1));
+					if(i==p.length-1)list.add(info);
+					//System.out.println(m.group(1));
+				}
+			}
+		}
+		return list;
 	}
-	@Override
-	public void endDocument() throws SAXException {
-		//System.out.println("endDocument");
+	private static void setInfo(int n,String s){
+		switch(n){
+		case 0:
+			info.setTitle(s);
+			break;
+		case 1:
+			info.setLink(s);
+			break;
+		case 2:
+			info.setThumbnailUrl(s);
+			break;
+		case 3:
+			info.setDescription(s);
+			break;
+		case 4:
+			s=s.replace(",","");
+			info.setNumber(Integer.parseInt(s));
+			break;
+		case 5:
+			info.setLength(s);
+			break;
+		case 6:
+			info.setDate(s);
+			break;
+		case 7:
+			s=s.replace(",","");
+			info.setTotalView(Integer.parseInt(s));
+			break;
+		case 8:
+			s=s.replace(",","");
+			info.setTotalRes(Integer.parseInt(s));
+			break;
+		case 9:
+			s=s.replace(",","");
+			info.setTotalMyList(Integer.parseInt(s));
+			break;
+		case 10:
+			s=s.replace(",","");
+			info.setDailyView(Integer.parseInt(s));
+			break;
+		case 11:
+			s=s.replace(",","");
+			info.setDailyRes(Integer.parseInt(s));
+			break;
+		case 12:
+			s=s.replace(",","");
+			info.setDailyMyList(Integer.parseInt(s));
+			break;
+		}
 	}
 }

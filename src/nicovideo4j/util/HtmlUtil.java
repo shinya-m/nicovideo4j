@@ -29,7 +29,7 @@ public class HtmlUtil {
 		return s.replaceAll("&#039;","'")
 				.replaceAll("&lt;","<")
 				.replaceAll("&gt;",">")
-				.replaceAll("&amp;","&")
+				.replaceAll("&amp;","＆")
 				.replaceAll("&nbsp;"," ")
 				.replaceAll("&quot;","\"");
 	}
