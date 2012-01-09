@@ -1,25 +1,17 @@
 package niconico4j;
-
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.net.URLConnection;
 import java.util.List;
 
-import javax.xml.parsers.ParserConfigurationException;
-
-import http.ConnectionUtil;
-
 import nicovideo4j.RSSInfo;
-import nicovideo4j.RSSReader;
+import nicovideo4j.RankingRSSReader;
 
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.xml.sax.SAXException;
 
-public class RSSReaderTest {
+public class RankingRSSReaderTest {
 
 	@BeforeClass
 	public static void setUpBeforeClass() throws Exception {
@@ -38,8 +30,8 @@ public class RSSReaderTest {
 	}
 
 	@Test
-	public void test() throws IOException, ParserConfigurationException, SAXException {
-		List<RSSInfo> list=RSSReader.getList("http://www.nicovideo.jp/ranking/daily");
+	public void test() throws IOException {
+		List<RSSInfo> list=RankingRSSReader.getList("http://www.nicovideo.jp/tag/VOCALOID?sort=f");
 		for(int i=0;i<list.size();i++){
 			RSSInfo v=list.get(i);
 			System.out.println("title	: "+v.getTitle());

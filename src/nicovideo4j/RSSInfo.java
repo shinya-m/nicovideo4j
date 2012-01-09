@@ -1,6 +1,10 @@
 package nicovideo4j;
 
-public class RSSInfo {
+import java.io.Serializable;
+
+public class RSSInfo implements Serializable{
+
+	private static final long serialVersionUID = -1196241298475422768L;
 
 	private String title;
 	private String link;

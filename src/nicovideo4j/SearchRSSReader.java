@@ -11,24 +11,20 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class RSSReader{
+public class SearchRSSReader {
 
+	private static final String base="http://www.nicovideo.jp/";
+	
 	private static RSSInfo info;
 	private static final String[] reg={
-			"<title>([^<]+)</title>",
-			"<link>([^<]+)</link>",
-			//"<pubDate>([^<]+)</pubDate>",
-			"src=\"([^\"]+)\"",
-			"nico-description\">([^<]+)</p>",
-			"nico-info-number\">([^<]+)</strong>",
-			"nico-info-length\">([^<]+)</strong>",
-			"nico-info-date\">([^<]+)</strong>",
-			"nico-info-total-view\">([^<]+)</strong>",
-			"nico-info-total-res\">([^<]+)</strong>",
-			"nico-info-total-mylist\">([^<]+)</strong>",
-			"nico-info-daily-view\">([^<]+)</strong>",
-			"nico-info-daily-res\">([^<]+)</strong>",
-			"nico-info-daily-mylist\">([^<]+)</strong>"
+			"img src=\"([^\"]+)\"",		//thumbnail
+			"<span>([^<]+)</span>",		//length
+			"vinfo_view\">([^<]+)</strong>",	//total view
+			"vinfo_res\">([^<]+)</strong>",		//comment
+			"vinfo_mylist\">([^<]+)</strong>",	//mylist
+			"strong>([^<]+)</strong>",	//date
+			"nobr><a href=\"([^\"]+)\"",	//link
+			"h\" title=\"([^\"]+)\">",	//title
 	};
 	
 	/**
@@ -37,7 +33,8 @@ public class RSSReader{
 	 * @throws IOException
 	 */
 	public static List<RSSInfo> getList(String url) throws IOException{
-		URLConnection con=ConnectionUtil.getConnection(url+"?rss=2.0");
+		URLConnection con;
+		con=ConnectionUtil.getConnection(url);
 		
 		BufferedReader bf=new BufferedReader(new InputStreamReader(con.getInputStream()));
 		
@@ -51,10 +48,13 @@ public class RSSReader{
 		}
 		Matcher m;
 		while((s=bf.readLine())!=null){
+			System.out.println(s);
 			for(int i=0;i<p.length;i++){
 				m=p[i].matcher(s);
 				if(m.find()){
-					if(i==0)info=new RSSInfo();
+					if(i==0){
+						info=new RSSInfo();
+					}
 					setInfo(i,m.group(1));
 					if(i==p.length-1)list.add(info);
 					//System.out.println(m.group(1));
@@ -66,50 +66,31 @@ public class RSSReader{
 	private static void setInfo(int n,String s){
 		switch(n){
 		case 0:
-			info.setTitle(s);
-			break;
-		case 1:
-			info.setLink(s);
-			break;
-		case 2:
 			info.setThumbnailUrl(s);
 			break;
-		case 3:
-			info.setDescription(s);
-			break;
-		case 4:
-			s=s.replace(",","");
-			info.setNumber(Integer.parseInt(s));
-			break;
-		case 5:
+		case 1:
 			info.setLength(s);
 			break;
-		case 6:
-			info.setDate(s);
-			break;
-		case 7:
+		case 2:
 			s=s.replace(",","");
 			info.setTotalView(Integer.parseInt(s));
 			break;
-		case 8:
+		case 3:
 			s=s.replace(",","");
 			info.setTotalRes(Integer.parseInt(s));
 			break;
-		case 9:
+		case 4:
 			s=s.replace(",","");
 			info.setTotalMyList(Integer.parseInt(s));
 			break;
-		case 10:
-			s=s.replace(",","");
-			info.setDailyView(Integer.parseInt(s));
+		case 5:
+			info.setDate(s);
 			break;
-		case 11:
-			s=s.replace(",","");
-			info.setDailyRes(Integer.parseInt(s));
+		case 6:
+			info.setLink(base+s);
 			break;
-		case 12:
-			s=s.replace(",","");
-			info.setDailyMyList(Integer.parseInt(s));
+		case 7:
+			info.setTitle(s);
 			break;
 		}
 	}
