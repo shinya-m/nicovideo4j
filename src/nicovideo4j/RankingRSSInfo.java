@@ -2,7 +2,7 @@ package nicovideo4j;
 
 import java.io.Serializable;
 
-public class RSSInfo implements Serializable{
+public class RankingRSSInfo implements Serializable{
 
 	private static final long serialVersionUID = -1196241298475422768L;
 

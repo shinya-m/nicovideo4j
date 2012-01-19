@@ -1,4 +1,4 @@
-package niconico4j;
+package nicovideo4j;
 
 import static org.junit.Assert.*;
 

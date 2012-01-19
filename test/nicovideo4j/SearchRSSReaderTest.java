@@ -1,9 +1,9 @@
-package niconico4j;
+package nicovideo4j;
 
 import java.io.IOException;
 import java.util.List;
 
-import nicovideo4j.RSSInfo;
+import nicovideo4j.RankingRSSInfo;
 import nicovideo4j.SearchRSSReader;
 
 import org.junit.After;
@@ -32,9 +32,9 @@ public class SearchRSSReaderTest {
 
 	@Test
 	public void test() throws IOException {
-		List<RSSInfo> list=SearchRSSReader.getList("http://www.nicovideo.jp/tag/VOCALOID?sort=f");
+		List<RankingRSSInfo> list=SearchRSSReader.getList(SearchRSSReader.TAG,SearchRSSReader.DATE_NEW,"VOCALOID");
 		for(int i=0;i<list.size();i++){
-			RSSInfo v=list.get(i);
+			RankingRSSInfo v=list.get(i);
 			System.out.println("title	: "+v.getTitle());
 			System.out.println("link	: "+v.getLink());
 			System.out.println("guid	: "+v.getGuid());

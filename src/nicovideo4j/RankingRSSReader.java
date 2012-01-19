@@ -13,7 +13,7 @@ import java.util.regex.Pattern;
 
 public class RankingRSSReader{
 
-	private static RSSInfo info;
+	private static RankingRSSInfo info;
 	private static final String[] reg={
 			"<title>([^<]+)</title>",
 			"<link>([^<]+)</link>",
@@ -36,7 +36,7 @@ public class RankingRSSReader{
 	 * @return
 	 * @throws IOException
 	 */
-	public static List<RSSInfo> getList(String url) throws IOException{
+	public static List<RankingRSSInfo> getList(String url) throws IOException{
 		URLConnection con;
 		if(url.contains("?") && url.contains("="))
 			con=ConnectionUtil.getConnection(url+"&rss=2.0");
@@ -45,7 +45,7 @@ public class RankingRSSReader{
 		
 		BufferedReader bf=new BufferedReader(new InputStreamReader(con.getInputStream()));
 		
-		List<RSSInfo> list=new ArrayList<RSSInfo>();
+		List<RankingRSSInfo> list=new ArrayList<RankingRSSInfo>();
 		
 		Pattern[] p=new Pattern[reg.length];
 		
@@ -59,7 +59,7 @@ public class RankingRSSReader{
 				m=p[i].matcher(s);
 				if(m.find()){
 					if(i==0){
-						info=new RSSInfo();
+						info=new RankingRSSInfo();
 					}
 					setInfo(i,m.group(1));
 					if(i==p.length-1)list.add(info);
